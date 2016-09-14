@@ -25,19 +25,26 @@ s! {
 
     pub struct glob_t {
         pub gl_pathc:   ::c_int,
-        __unused1:      ::c_int,
+        pub gl_matchc:  ::c_int,
         pub gl_offs:    ::c_int,
-        __unused2:      ::c_int,
+        pub gl_flags:   ::c_int,
         pub gl_pathv:   *mut *mut ::c_char,
-
+        __unused1: *mut ::c_void,
+        __unused2: *mut ::c_void,
         __unused3: *mut ::c_void,
-
         __unused4: *mut ::c_void,
         __unused5: *mut ::c_void,
         __unused6: *mut ::c_void,
         __unused7: *mut ::c_void,
-        __unused8: *mut ::c_void,
-        __unused9: *mut ::c_void,
+    }
+
+    pub struct kevent {
+        pub ident: ::uintptr_t,
+        pub filter: ::c_short,
+        pub flags: ::c_ushort,
+        pub fflags: ::c_uint,
+        pub data: ::int64_t,
+        pub udata: *mut ::c_void,
     }
 
     pub struct stat {
@@ -109,33 +116,6 @@ s! {
         pub dli_fbase: *mut ::c_void,
         pub dli_sname: *const ::c_char,
         pub dli_saddr: *mut ::c_void,
-    }
-
-    pub struct lconv {
-        pub decimal_point: *mut ::c_char,
-        pub thousands_sep: *mut ::c_char,
-        pub grouping: *mut ::c_char,
-        pub int_curr_symbol: *mut ::c_char,
-        pub currency_symbol: *mut ::c_char,
-        pub mon_decimal_point: *mut ::c_char,
-        pub mon_thousands_sep: *mut ::c_char,
-        pub mon_grouping: *mut ::c_char,
-        pub positive_sign: *mut ::c_char,
-        pub negative_sign: *mut ::c_char,
-        pub int_frac_digits: ::c_char,
-        pub frac_digits: ::c_char,
-        pub p_cs_precedes: ::c_char,
-        pub p_sep_by_space: ::c_char,
-        pub n_cs_precedes: ::c_char,
-        pub n_sep_by_space: ::c_char,
-        pub p_sign_posn: ::c_char,
-        pub n_sign_posn: ::c_char,
-        pub int_p_cs_precedes: ::c_char,
-        pub int_p_sep_by_space: ::c_char,
-        pub int_n_cs_precedes: ::c_char,
-        pub int_n_sep_by_space: ::c_char,
-        pub int_p_sign_posn: ::c_char,
-        pub int_n_sign_posn: ::c_char,
     }
 
     pub struct lastlog {
@@ -264,6 +244,44 @@ pub const PTHREAD_MUTEX_NORMAL: ::c_int = 3;
 pub const PTHREAD_MUTEX_STRICT_NP: ::c_int = 4;
 pub const PTHREAD_MUTEX_DEFAULT: ::c_int = PTHREAD_MUTEX_STRICT_NP;
 
+pub const EVFILT_AIO: ::int16_t = -3;
+pub const EVFILT_PROC: ::int16_t = -5;
+pub const EVFILT_READ: ::int16_t = -1;
+pub const EVFILT_SIGNAL: ::int16_t = -6;
+pub const EVFILT_TIMER: ::int16_t = -7;
+pub const EVFILT_VNODE: ::int16_t = -4;
+pub const EVFILT_WRITE: ::int16_t = -2;
+
+pub const EV_ADD: ::uint16_t = 0x1;
+pub const EV_DELETE: ::uint16_t = 0x2;
+pub const EV_ENABLE: ::uint16_t = 0x4;
+pub const EV_DISABLE: ::uint16_t = 0x8;
+pub const EV_ONESHOT: ::uint16_t = 0x10;
+pub const EV_CLEAR: ::uint16_t = 0x20;
+pub const EV_FLAG1: ::uint16_t = 0x2000;
+pub const EV_ERROR: ::uint16_t = 0x4000;
+pub const EV_EOF: ::uint16_t = 0x8000;
+pub const EV_SYSFLAGS: ::uint16_t = 0xf000;
+
+pub const NOTE_LOWAT: ::uint32_t = 0x00000001;
+pub const NOTE_EOF: ::uint32_t = 0x00000002;
+pub const NOTE_DELETE: ::uint32_t = 0x00000001;
+pub const NOTE_WRITE: ::uint32_t = 0x00000002;
+pub const NOTE_EXTEND: ::uint32_t = 0x00000004;
+pub const NOTE_ATTRIB: ::uint32_t = 0x00000008;
+pub const NOTE_LINK: ::uint32_t = 0x00000010;
+pub const NOTE_RENAME: ::uint32_t = 0x00000020;
+pub const NOTE_REVOKE: ::uint32_t = 0x00000040;
+pub const NOTE_TRUNCATE: ::uint32_t = 0x00000080;
+pub const NOTE_EXIT: ::uint32_t = 0x80000000;
+pub const NOTE_FORK: ::uint32_t = 0x40000000;
+pub const NOTE_EXEC: ::uint32_t = 0x20000000;
+pub const NOTE_PDATAMASK: ::uint32_t = 0x000fffff;
+pub const NOTE_PCTRLMASK: ::uint32_t = 0xf0000000;
+pub const NOTE_TRACK: ::uint32_t = 0x00000001;
+pub const NOTE_TRACKERR: ::uint32_t = 0x00000002;
+pub const NOTE_CHILD: ::uint32_t = 0x00000004;
+
 pub const TMP_MAX : ::c_uint = 0x7fffffff;
 
 pub const NI_MAXHOST: ::size_t = 256;
@@ -313,7 +331,6 @@ pub const KERN_OSVERSION: ::c_int = 27;
 pub const KERN_SOMAXCONN: ::c_int = 28;
 pub const KERN_SOMINCONN: ::c_int = 29;
 pub const KERN_USERMOUNT: ::c_int = 30;
-pub const KERN_RND: ::c_int = 31;
 pub const KERN_NOSUIDCOREDUMP: ::c_int = 32;
 pub const KERN_FSYNC: ::c_int = 33;
 pub const KERN_SYSVMSG: ::c_int = 34;
@@ -392,6 +409,12 @@ extern {
                        serv: *mut ::c_char,
                        servlen: ::size_t,
                        flags: ::c_int) -> ::c_int;
+    pub fn kevent(kq: ::c_int,
+                  changelist: *const ::kevent,
+                  nchanges: ::c_int,
+                  eventlist: *mut ::kevent,
+                  nevents: ::c_int,
+                  timeout: *const ::timespec) -> ::c_int;
     pub fn mprotect(addr: *mut ::c_void, len: ::size_t, prot: ::c_int)
                     -> ::c_int;
     pub fn pthread_main_np() -> ::c_int;
@@ -406,4 +429,16 @@ extern {
                   newlen: ::size_t)
                   -> ::c_int;
     pub fn getentropy(buf: *mut ::c_void, buflen: ::size_t) -> ::c_int;
+}
+
+cfg_if! {
+    if #[cfg(target_os = "openbsd")] {
+        mod openbsd;
+        pub use self::openbsd::*;
+    } else if #[cfg(target_os = "bitrig")] {
+        mod bitrig;
+        pub use self::bitrig::*;
+    } else {
+        // Unknown target_os
+    }
 }

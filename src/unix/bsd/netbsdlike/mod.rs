@@ -525,20 +525,19 @@ extern {
                    flags: ::c_int) -> ::c_int;
    pub fn mkfifoat(dirfd: ::c_int, pathname: *const ::c_char,
                    mode: ::mode_t) -> ::c_int;
-    pub fn pthread_condattr_setclock(attr: *mut pthread_condattr_t,
-                                     clock_id: clockid_t) -> ::c_int;
+   pub fn sem_timedwait(sem: *mut sem_t,
+                        abstime: *const ::timespec) -> ::c_int;
+   pub fn pthread_condattr_setclock(attr: *mut pthread_condattr_t,
+                                    clock_id: clockid_t) -> ::c_int;
 }
 
 cfg_if! {
-    if #[cfg(target_os = "bitrig")] {
-        mod bitrig;
-        pub use self::bitrig::*;
-    } else if #[cfg(target_os = "netbsd")] {
+    if #[cfg(target_os = "netbsd")] {
         mod netbsd;
         pub use self::netbsd::*;
-    } else if #[cfg(target_os = "openbsd")] {
-        mod openbsd;
-        pub use self::openbsd::*;
+    } else if #[cfg(any(target_os = "openbsd", target_os = "bitrig"))] {
+        mod openbsdlike;
+        pub use self::openbsdlike::*;
     } else {
         // Unknown target_os
     }

@@ -251,6 +251,8 @@ extern {
     pub fn fscanf(stream: *mut ::FILE, format: *const ::c_char, ...) -> ::c_int;
     pub fn scanf(format: *const ::c_char, ...) -> ::c_int;
     pub fn sscanf(s: *const ::c_char, format: *const ::c_char, ...) -> ::c_int;
+    pub fn getchar_unlocked() -> ::c_int;
+    pub fn putchar_unlocked(c: ::c_int) -> ::c_int;
 
     #[cfg_attr(target_os = "netbsd", link_name = "__socket30")]
     pub fn socket(domain: ::c_int, ty: ::c_int, protocol: ::c_int) -> ::c_int;
@@ -643,6 +645,10 @@ extern {
                link_name = "mktime$UNIX2003")]
     #[cfg_attr(target_os = "netbsd", link_name = "__mktime50")]
     pub fn mktime(tm: *mut tm) -> time_t;
+    #[cfg_attr(target_os = "netbsd", link_name = "__time50")]
+    pub fn time(time: *mut time_t) -> time_t;
+    #[cfg_attr(target_os = "netbsd", link_name = "__locatime50")]
+    pub fn localtime(time: *const time_t) -> *mut tm;
 
     #[cfg_attr(target_os = "netbsd", link_name = "__mknod50")]
     pub fn mknod(pathname: *const ::c_char, mode: ::mode_t,

@@ -139,9 +139,12 @@ s! {
         pub f_files: ::fsfilcnt_t,
         pub f_ffree: ::fsfilcnt_t,
         pub f_favail: ::fsfilcnt_t,
+        #[cfg(target_endian = "little")]
         pub f_fsid: ::c_ulong,
         #[cfg(target_pointer_width = "32")]
-        pub __f_unused: ::c_int,
+        __f_unused: ::c_int,
+        #[cfg(target_endian = "big")]
+        pub f_fsid: ::c_ulong,
         pub f_flag: ::c_ulong,
         pub f_namemax: ::c_ulong,
         __f_spare: [::c_int; 6],
@@ -716,6 +719,8 @@ extern {
     pub fn if_freenameindex(ptr: *mut if_nameindex);
     pub fn sync_file_range(fd: ::c_int, offset: ::off64_t,
                            nbytes: ::off64_t, flags: ::c_uint) -> ::c_int;
+    pub fn getifaddrs(ifap: *mut *mut ::ifaddrs) -> ::c_int;
+    pub fn freeifaddrs(ifa: *mut ::ifaddrs);
 }
 
 cfg_if! {
